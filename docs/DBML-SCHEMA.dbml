@@ -1,0 +1,142 @@
+// EatClub - Database Schema in DBML Format
+// Use this at: https://dbdiagram.io/
+// Paste the entire content there to visualize the schema
+
+Table users {
+  userId varchar [primary key]
+  name varchar [not null]
+  email varchar [unique, not null]
+  password varchar [not null]
+  role varchar [not null, note: 'USER or ADMIN']
+  phoneNumber varchar
+  address text
+  profileImageUrl varchar
+  isActive boolean [default: true]
+  lastLoginAt bigint
+  createdAt bigint [not null]
+  updatedAt bigint [not null]
+}
+
+Table restaurants {
+  restaurantId varchar [primary key]
+  adminId varchar [not null, ref: > users.userId]
+  restaurantName varchar [not null]
+  description text
+  address text [not null]
+  phoneNumber varchar
+  cuisineType varchar
+  imageUrl varchar
+  isActive boolean [default: true]
+  createdAt bigint [not null]
+  updatedAt bigint [not null]
+}
+
+Table menu_items {
+  itemId varchar [primary key]
+  restaurantId varchar [not null, ref: > restaurants.restaurantId]
+  itemName varchar [not null]
+  description text
+  price decimal [not null]
+  category varchar
+  isVegetarian boolean [default: false]
+  isSpicy boolean [default: false]
+  preparationTime int [default: 20]
+  imageUrl varchar
+  isAvailable boolean [default: true]
+  createdAt bigint [not null]
+  updatedAt bigint [not null]
+}
+
+Table carts {
+  cartId varchar [primary key]
+  userId varchar [unique, not null, ref: > users.userId]
+  restaurantId varchar [ref: > restaurants.restaurantId]
+  createdAt bigint [not null]
+  updatedAt bigint [not null]
+}
+
+Table cart_items {
+  cartItemId varchar [primary key]
+  cartId varchar [not null, ref: > carts.cartId]
+  itemId varchar [not null, ref: > menu_items.itemId]
+  quantity int [not null, default: 1]
+  specialInstructions text
+  addedAt bigint [not null]
+}
+
+Table orders {
+  orderId varchar [primary key]
+  userId varchar [not null, ref: > users.userId]
+  restaurantId varchar [not null, ref: > restaurants.restaurantId]
+  deliveryAddress text [not null]
+  phoneNumber varchar [not null]
+  subtotal decimal [not null]
+  tax decimal [default: 0]
+  deliveryCharges decimal [default: 50.00]
+  discountAmount decimal [default: 0]
+  total decimal [not null]
+  orderStatus varchar [not null, note: 'CONFIRMED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED']
+  paymentStatus varchar [not null, note: 'PENDING, COMPLETED, FAILED, REFUNDED']
+  paymentMethod varchar
+  specialInstructions text
+  estimatedDeliveryTime bigint
+  deliveredAt bigint
+  cancelledAt bigint
+  cancellationReason varchar
+  createdAt bigint [not null]
+  updatedAt bigint [not null]
+}
+
+Table order_items {
+  orderItemId varchar [primary key]
+  orderId varchar [not null, ref: > orders.orderId]
+  itemId varchar [not null, ref: > menu_items.itemId]
+  itemName varchar [not null, note: 'Snapshot of item name at order time']
+  quantity int [not null]
+  unitPrice decimal [not null]
+  totalPrice decimal [not null]
+  specialInstructions text
+  createdAt bigint [not null]
+}
+
+// Sample Data Records
+
+Records users(userId, name, email, role) {
+  'user-001', 'Rajesh Kumar', 'rajesh.kumar@example.com', 'USER'
+  'user-002', 'Priya Singh', 'priya.singh@example.com', 'USER'
+  'admin-001', 'Arjun Verma', 'arjun.verma@restaurant.com', 'ADMIN'
+  'admin-002', 'Neha Gupta', 'neha.gupta@restaurant.com', 'ADMIN'
+}
+
+Records restaurants(restaurantId, adminId, restaurantName, cuisineType) {
+  'rest-001', 'admin-001', 'Tasty Bites', 'North Indian'
+  'rest-002', 'admin-002', 'Spice Garden', 'South Indian'
+}
+
+Records menu_items(itemId, restaurantId, itemName, price, isVegetarian) {
+  'item-001', 'rest-001', 'Butter Chicken', 299.99, false
+  'item-002', 'rest-001', 'Tandoori Chicken', 349.99, false
+  'item-003', 'rest-001', 'Paneer Tikka Masala', 279.99, true
+  'item-009', 'rest-002', 'Masala Dosa', 159.99, true
+  'item-010', 'rest-002', 'Idli Sambar', 119.99, true
+  'item-011', 'rest-002', 'Chicken 65', 229.99, false
+}
+
+Records carts(cartId, userId) {
+  'cart-001', 'user-001'
+  'cart-002', 'user-002'
+}
+
+Records orders(orderId, userId, restaurantId, total, orderStatus, paymentStatus) {
+  'ORD-20240410-001', 'user-001', 'rest-001', 757.97, 'DELIVERED', 'COMPLETED'
+  'ORD-20240412-002', 'user-002', 'rest-002', 498.37, 'DELIVERED', 'COMPLETED'
+  'ORD-20240414-003', 'user-001', 'rest-002', 592.77, 'OUT_FOR_DELIVERY', 'COMPLETED'
+  'ORD-20240416-004', 'user-002', 'rest-001', 934.97, 'CONFIRMED', 'PENDING'
+}
+
+Records order_items(orderItemId, orderId, itemName, quantity, unitPrice) {
+  'oitem-001', 'ORD-20240410-001', 'Butter Chicken', 2, 299.99
+  'oitem-002', 'ORD-20240412-002', 'Masala Dosa', 2, 159.99
+  'oitem-004', 'ORD-20240414-003', 'Idli Sambar', 2, 119.99
+  'oitem-006', 'ORD-20240416-004', 'Tandoori Chicken', 2, 349.99
+}
